@@ -178,6 +178,17 @@ def distribute_items_restrictive(window, worlds, fill_locations=None):
     logger.info('Placing priority items.')
     fill_restrictive_fast(window, worlds, fill_locations, prioitempool)
 
+    # Place items on Impa if skip Zelda is active. And no item has been
+    # placed there already
+    # We need to have a restrictive placement here since we can't place items 
+    # belonging to another world on Impa.
+    if any(map(lambda x: worlds[x].skip_child_zelda, range(0,len(worlds)))):
+        logger.info("Placing items on Impa")
+        impa_locations = [location for location in fill_locations if location.item is None and location.name == "Song from Impa" and location.world.skip_child_zelda]
+        for location in impa_locations:
+            fill_locations.remove(location)
+        fill_location_fast(window, worlds, impa_locations, restitempool )
+
     # Place the rest of the items.
     # No restrictions at all. Places them completely randomly. Since they
     # cannot affect the beatability, we don't need to check them
@@ -496,6 +507,28 @@ def fill_restrictive_fast(window, worlds, locations, itempool):
         window.fillcount += 1
         window.update_progress(5 + ((window.fillcount / window.locationcount) * 30))
 
+# Fill locations with restrictions without validating if the world is beatable.
+def fill_location_fast(window, worlds, locations, itempool):
+    while itempool and locations:
+        spot_to_fill = locations.pop()
+        random.shuffle(itempool)
+
+        # get an item
+        item_to_fill = None
+        for item_to_place in itempool:
+            if spot_to_fill.can_fill_fast(item_to_place):
+                item_to_fill = item_to_place
+                # Impa can't presently hand out refills at the start of the game.
+                # Only replace her item with a rupee if it's junk.
+                if spot_to_fill.world.skip_child_zelda and spot_to_fill.name == 'Song from Impa' and item_to_fill.name in remove_junk_set:
+                    item_to_fill = ItemFactory('Rupee (1)', spot_to_fill.world)
+                break
+
+        # Place the item in the world and continue
+        spot_to_fill.world.push_item(spot_to_fill, item_to_fill)
+        itempool.remove(item_to_fill)
+        window.fillcount += 1
+        window.update_progress(5 + ((window.fillcount / window.locationcount) * 30))
 
 # this places item in item_pool completely randomly into
 # fill_locations. There is no checks for validity since
@@ -505,10 +538,6 @@ def fast_fill(window, locations, itempool):
     while itempool and locations:
         spot_to_fill = locations.pop()
         item_to_place = itempool.pop()
-        # Impa can't presently hand out refills at the start of the game.
-        # Only replace her item with a rupee if it's junk.
-        if spot_to_fill.world.skip_child_zelda and spot_to_fill.name == 'Song from Impa' and item_to_place.name in remove_junk_set:
-            item_to_place = ItemFactory('Rupee (1)', spot_to_fill.world)
         spot_to_fill.world.push_item(spot_to_fill, item_to_place)
         window.fillcount += 1
         window.update_progress(5 + ((window.fillcount / window.locationcount) * 30))
