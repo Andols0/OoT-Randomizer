@@ -23,27 +23,26 @@ class FillError(ShuffleError):
 
 # Places all items into the world
 def distribute_items_restrictive(window, worlds, fill_locations=None):
-    if worlds[0].shuffle_song_items == 'song':
-        song_location_names = [
-            'Song from Composers Grave', 'Song from Impa', 'Song from Malon', 'Song from Saria',
-            'Song from Ocarina of Time', 'Song from Windmill', 'Sheik in Forest', 'Sheik at Temple',
-            'Sheik in Crater', 'Sheik in Ice Cavern', 'Sheik in Kakariko', 'Sheik at Colossus']
-    elif worlds[0].shuffle_song_items == 'dungeon':
-        song_location_names = [
-            'Deku Tree Queen Gohma Heart', 'Dodongos Cavern King Dodongo Heart',
-            'Jabu Jabus Belly Barinade Heart', 'Forest Temple Phantom Ganon Heart',
-            'Fire Temple Volvagia Heart', 'Water Temple Morpha Heart',
-            'Spirit Temple Twinrova Heart', 'Shadow Temple Bongo Bongo Heart',
-            'Sheik in Ice Cavern', 'Song from Impa',
-            'Gerudo Training Grounds MQ Ice Arrows Chest',
-            'Gerudo Training Grounds Maze Path Final Chest',
-            'Bottom of the Well Lens of Truth Chest',
-            'Bottom of the Well MQ Lens of Truth Chest']
-    else:
-        song_location_names = []
-
     song_locations = []
     for world in worlds:
+        if world.shuffle_song_items == 'song':
+            song_location_names = [
+                'Song from Composers Grave', 'Song from Impa', 'Song from Malon', 'Song from Saria',
+                'Song from Ocarina of Time', 'Song from Windmill', 'Sheik in Forest', 'Sheik at Temple',
+                'Sheik in Crater', 'Sheik in Ice Cavern', 'Sheik in Kakariko', 'Sheik at Colossus']
+        elif world.shuffle_song_items == 'dungeon':
+            song_location_names = [
+                'Deku Tree Queen Gohma Heart', 'Dodongos Cavern King Dodongo Heart',
+                'Jabu Jabus Belly Barinade Heart', 'Forest Temple Phantom Ganon Heart',
+                'Fire Temple Volvagia Heart', 'Water Temple Morpha Heart',
+                'Spirit Temple Twinrova Heart', 'Shadow Temple Bongo Bongo Heart',
+                'Sheik in Ice Cavern', 'Song from Impa',
+                'Gerudo Training Grounds MQ Ice Arrows Chest',
+                'Gerudo Training Grounds Maze Path Final Chest',
+                'Bottom of the Well Lens of Truth Chest',
+                'Bottom of the Well MQ Lens of Truth Chest']
+        else:
+            song_location_names = []
         for location in song_location_names:
             try:
                 song_locations.append(world.get_location(location))
@@ -66,12 +65,15 @@ def distribute_items_restrictive(window, worlds, fill_locations=None):
 
     # Generate the itempools
     shopitempool = [item for world in worlds for item in world.itempool if item.type == 'Shop']
-    songitempool = [item for world in worlds for item in world.itempool if item.type == 'Song']
+    songitempool = []
     itempool =     [item for world in worlds for item in world.itempool if item.type != 'Shop' and item.type != 'Song']
 
-    if worlds[0].shuffle_song_items == 'any':
-        itempool.extend(songitempool)
-        songitempool = []
+    for world in worlds:
+        if world.shuffle_song_items == 'any':
+            worldsongitempool = [item for item in world.itempool if item.type == 'Song']
+            itempool.extend(worldsongitempool)
+        else:
+            songitempool = songitempool + [item for item in world.itempool if item.type == 'Song']
 
     # add unrestricted dungeon items to main item pool
     itempool.extend([item for world in worlds for item in world.get_unrestricted_dungeon_items()])
@@ -99,25 +101,38 @@ def distribute_items_restrictive(window, worlds, fill_locations=None):
     junk_items = remove_junk_items.copy()
     junk_items.remove('Ice Trap')
     major_items = [item for (item, data) in item_table.items() if data[0] == 'Item' and data[1] and data[2] is not None]
-    fake_items = []
-    if worlds[0].settings.ice_trap_appearance == 'major_only':
-        model_items = [item for item in itempool if item.majoritem]
-        if len(model_items) == 0:  # All major items were somehow removed from the pool (can happen in plando)
-            model_items = ItemFactory(major_items)
-    elif worlds[0].settings.ice_trap_appearance == 'junk_only':
-        model_items = [item for item in itempool if item.name in junk_items]
-        if len(model_items) == 0:  # All junk was removed
-            model_items = ItemFactory(junk_items)
-    else:  # world[0].settings.ice_trap_appearance == 'anything':
+    major_fake_items, junk_fake_items, any_fake_items = [], [], []
+    if any(map(lambda x: worlds[x].ice_trap_appearance == 'major_only', range(0,len(worlds)))):
+        major_model_items = [item for item in itempool if item.majoritem]
+        if len(major_model_items) == 0:  # All major items were somehow removed from the pool (can happen in plando)
+            major_model_items = ItemFactory(major_items)
+        while len(ice_traps) > len(major_fake_items):
+            major_fake_items.extend(major_model_items)
+    if any(map(lambda x: worlds[x].ice_trap_appearance == 'junk_only', range(0,len(worlds)))):
+        junk_model_items = [item for item in itempool if item.name in junk_items]
+        if len(junk_model_items) == 0:  # All junk was removed
+            junk_model_items = ItemFactory(junk_items)
+        while len(ice_traps) > len(junk_fake_items):
+            junk_fake_items.extend(junk_model_items)
+    if any(map(lambda x: worlds[x].ice_trap_appearance == 'anything', range(0,len(worlds)))):
         model_items = [item for item in itempool if item.name != 'Ice Trap']
         if len(model_items) == 0:  # All major items and junk were somehow removed from the pool (can happen in plando)
             model_items = ItemFactory(major_items) + ItemFactory(junk_items)
-    while len(ice_traps) > len(fake_items):
+        while len(ice_traps) > len(any_fake_items):
         # if there are more ice traps than model items, then double up on model items
-        fake_items.extend(model_items)
-    for random_item in random.sample(fake_items, len(ice_traps)):
-        ice_trap = ice_traps.pop(0)
-        ice_trap.looks_like_item = random_item
+            any_fake_items.extend(model_items)
+
+    random.shuffle(major_fake_items)    
+    random.shuffle(junk_fake_items)
+    random.shuffle(any_fake_items)
+    for ice_trap in ice_traps:
+        if ice_trap.world.ice_trap_appearance == 'major_only':
+            fake_item = major_fake_items.pop()
+        elif ice_trap.world.ice_trap_appearance == 'junk_only':
+            fake_item = junk_fake_items.pop()
+        elif ice_trap.world.ice_trap_appearance == "anything":
+            fake_item = any_fake_items.pop()
+        ice_trap.looks_like_item = fake_item
 
     # Start a search cache here.
     search = Search([world.state for world in worlds])
@@ -151,7 +166,7 @@ def distribute_items_restrictive(window, worlds, fill_locations=None):
     # Placing songs on their own since they have a relatively high chance
     # of failing compared to other item type. So this way we only have retry
     # the song locations only.
-    if worlds[0].shuffle_song_items != 'any':
+    if any(map(lambda x: worlds[x].shuffle_song_items != 'any', range(0,len(worlds)))):
         logger.info('Placing song items.')
         fill_ownworld_restrictive(window, worlds, search, song_locations, songitempool, progitempool, "song")
         search.collect_locations()
@@ -159,7 +174,7 @@ def distribute_items_restrictive(window, worlds, fill_locations=None):
 
     # Put one item in every dungeon, needs to be done before other items are
     # placed to ensure there is a spot available for them
-    if worlds[0].one_item_per_dungeon:
+    if any(map(lambda x: worlds[x].one_item_per_dungeon, range(0,len(worlds)))):
         logger.info('Placing one major item per dungeon.')
         fill_dungeon_unique_item(window, worlds, search, fill_locations, progitempool)
         search.collect_locations()
@@ -256,7 +271,7 @@ def fill_dungeon_unique_item(window, worlds, search, fill_locations, itempool):
     major_items = [item for item in itempool if item.majoritem]
     minor_items = [item for item in itempool if not item.majoritem]
 
-    dungeons = [dungeon for world in worlds for dungeon in world.dungeons]
+    dungeons = [dungeon for world in worlds for dungeon in world.dungeons if dungeon.world.one_item_per_dungeon]
     double_dungeons = []
     for dungeon in dungeons:
         # we will count spirit temple twice so that it gets 2 items to match vanilla

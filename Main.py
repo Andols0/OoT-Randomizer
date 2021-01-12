@@ -132,7 +132,7 @@ def build_world_graphs(settings, window=dummy_window()):
         window.update_progress(0 + 1*(id + 1)/settings.world_count)
         logger.info('Creating Overworld')
 
-        if settings.logic_rules == 'glitched':
+        if world.logic_rules == 'glitched':
             overworld_data = os.path.join(data_path('Glitched World'), 'Overworld.json')
         else:
             overworld_data = os.path.join(data_path('World'), 'Overworld.json')
@@ -141,8 +141,7 @@ def build_world_graphs(settings, window=dummy_window()):
         world.load_regions_from_json(overworld_data)
         create_dungeons(world)
         world.create_internal_locations()
-
-        if settings.shopsanity != 'off':
+        if world.shopsanity != 'off':
             world.random_shop_prices()
         world.set_scrub_prices()
 
@@ -725,5 +724,5 @@ def create_playthrough(spoiler):
             # But the actual location saved here may be in a different world
             sw.light_arrow_location = spoiler.worlds[w.light_arrow_location.world.id].get_location(w.light_arrow_location.name)
 
-    if worlds[0].entrance_shuffle:
+    if any(map(lambda x: worlds[x].entrance_shuffle, range(0,len(worlds)))):
         spoiler.entrance_playthrough = OrderedDict((str(i + 1), list(sphere)) for i, sphere in enumerate(entrance_spheres))

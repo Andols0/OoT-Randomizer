@@ -28,6 +28,7 @@ class InvalidFileException(Exception):
 
 per_world_keys = (
     'randomized_settings',
+    'world_settings',
     'starting_items',
     'item_pool',
     'dungeons',
@@ -220,6 +221,7 @@ class WorldDistribution(object):
     def update(self, src_dict, update_all=False):
         update_dict = {
             'randomized_settings': {name: record for (name, record) in src_dict.get('randomized_settings', {}).items()},
+            'world_settings': {name: record for (name, record) in src_dict.get('world_settings', {}).items()},
             'dungeons': {name: DungeonRecord(record) for (name, record) in src_dict.get('dungeons', {}).items()},
             'trials': {name: TrialRecord(record) for (name, record) in src_dict.get('trials', {}).items()},
             'item_pool': {name: ItemPoolRecord(record) for (name, record) in src_dict.get('item_pool', {}).items()},
@@ -249,7 +251,8 @@ class WorldDistribution(object):
 
     def to_json(self):
         return {
-            'randomized_settings': self.randomized_settings,      
+            'randomized_settings': self.randomized_settings,
+            'world_settings': self.world_settings,
             'starting_items': SortedDict({name: record.to_json() for (name, record) in self.starting_items.items()}),
             'dungeons': {name: record.to_json() for (name, record) in self.dungeons.items()},
             'trials': {name: record.to_json() for (name, record) in self.trials.items()},
@@ -302,6 +305,9 @@ class WorldDistribution(object):
             if name not in world.randomized_list:
                 world.randomized_list.append(name)
 
+    def configure_world_settings(self, world):
+        for name, record in self.world_settings.items():
+            setattr(world, name, record)
 
     def configure_starting_items_settings(self, world):
         if world.start_with_rupees:
@@ -801,6 +807,7 @@ class Distribution(object):
             'file_hash': (self.src_dict.get('file_hash', []) + [None, None, None, None, None])[0:5],
             'playthrough': None,
             'entrance_playthrough': None,
+            'world_settings': None, #is this needed?
             '_settings': self.src_dict.get('settings', {}),
         }
 
@@ -902,41 +909,41 @@ class Distribution(object):
             else:
                 starting_items = starting_items + list(itertools.chain(self.settings.starting_songs))
 
-        data = defaultdict(int)
-        for itemsetting in starting_items:
+            data = defaultdict(int)
+            for itemsetting in starting_items:
                 if not "World" in itemsetting:
-            if itemsetting in StartingItems.everything:
-                item = StartingItems.everything[itemsetting]
-                if not item.special:
-                    data[item.itemname] += 1
-                else:
+                    if itemsetting in StartingItems.everything:
+                        item = StartingItems.everything[itemsetting]
+                        if not item.special:
+                            data[item.itemname] += 1
+                        else:
                             if item.itemname == 'Rutos Letter' and self.zora_fountain != 'open':
-                        data['Rutos Letter'] = 1
-                    elif item.itemname in ['Bottle', 'Rutos Letter']:
-                        data['Bottle'] += 1
+                                data['Rutos Letter'] = 1
+                            elif item.itemname in ['Bottle', 'Rutos Letter']:
+                                data['Bottle'] += 1
+                            else:
+                                raise KeyError("invalid special item: {}".format(item.itemname))
                     else:
-                        raise KeyError("invalid special item: {}".format(item.itemname))
-            else:
-                raise KeyError("invalid starting item: {}".format(itemsetting))
+                        raise KeyError("invalid starting item: {}".format(itemsetting))
 
-        # add ammo
-        for item in list(data.keys()):
-            match = [x for x in StartingItems.inventory.values() if x.itemname == item]
-            if match and match[0].ammo:
-                for ammo,qty in match[0].ammo.items():
-                    data[ammo] += qty[data[item]-1]
+            # add ammo
+            for item in list(data.keys()):
+                match = [x for x in StartingItems.inventory.values() if x.itemname == item]
+                if match and match[0].ammo:
+                    for ammo,qty in match[0].ammo.items():
+                        data[ammo] += qty[data[item]-1]
 
-        # add hearts
-        if self.settings.starting_hearts > 3:
-            data['Piece of Heart (Treasure Chest Game)'] = 1
-            data['Piece of Heart'] -= 1
-            num_hearts_to_collect = self.settings.starting_hearts - 3
-            if num_hearts_to_collect % 2 == 1:
-                data['Piece of Heart'] += 4
-                num_hearts_to_collect -= 1
-            for i in range(0, num_hearts_to_collect, 2):
-                data['Piece of Heart'] += 4
-                data['Heart Container'] += 1
+            # add hearts
+            if self.settings.starting_hearts > 3:
+                data['Piece of Heart (Treasure Chest Game)'] = 1
+                data['Piece of Heart'] -= 1
+                num_hearts_to_collect = self.settings.starting_hearts - 3
+                if num_hearts_to_collect % 2 == 1:
+                    data['Piece of Heart'] += 4
+                    num_hearts_to_collect -= 1
+                for i in range(0, num_hearts_to_collect, 2):
+                    data['Piece of Heart'] += 4
+                    data['Heart Container'] += 1
 
             world.update({'starting_items': data})
 

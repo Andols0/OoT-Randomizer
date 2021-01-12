@@ -48,6 +48,9 @@ class World(object):
         self.__dict__.update(settings.__dict__)
         self.distribution = settings.distribution.world_dists[id]
 
+        # if any settings are specified for a specific world, put them into this world.
+        self.distribution.configure_world_settings(self)
+
         # rename a few attributes...
         self.keysanity = self.shuffle_smallkeys in ['keysanity', 'remove', 'any_dungeon', 'overworld']
         self.check_beatable_only = not self.all_reachable
@@ -142,7 +145,7 @@ class World(object):
         self.added_hint_types = {}
         self.item_added_hint_types = {}
         self.hint_exclusions = set()
-        if self.skip_child_zelda or settings.skip_child_zelda:
+        if self.skip_child_zelda:
             self.hint_exclusions.add('Song from Impa')
         self.hint_type_overrides = {}
         self.item_hint_type_overrides = {}
@@ -257,7 +260,7 @@ class World(object):
             self.starting_tod = random.choice(choices)
             self.randomized_list.append('starting_tod')
         if self.starting_age == 'random':
-            if self.settings.open_forest == 'closed':
+            if self.open_forest == 'closed':
                 # adult is not compatible
                 self.starting_age = 'child'
             else:
@@ -752,7 +755,7 @@ class World(object):
                 elif item.name == 'Bottle with Big Poe':
                     # The max number of requred Big Poe Bottles is based on the setting
                     dupe_locations = duplicate_item_woth[world_id].get(item.name, [])
-                    max_progressive = self.settings.big_poe_count
+                    max_progressive = self.big_poe_count
                 elif item.name == 'Progressive Wallet':
                     dupe_locations = duplicate_item_woth[world_id].get(item.name, [])
                     max_progressive = self.maximum_wallets

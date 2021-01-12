@@ -341,7 +341,7 @@ def set_entrances(worlds):
     for world in worlds:
         world.initialize_entrances()
 
-    if worlds[0].entrance_shuffle:
+    if any(map(lambda x: worlds[x].entrance_shuffle, range(0,len(worlds)))):
         shuffle_random_entrances(worlds)
 
     set_entrances_based_rules(worlds)
@@ -367,42 +367,41 @@ def shuffle_random_entrances(worlds):
         one_way_entrance_pools = OrderedDict()
         entrance_pools = OrderedDict()
 
-        if worlds[0].owl_drops:
+        if world.owl_drops:
             one_way_entrance_pools['OwlDrop'] = world.get_shufflable_entrances(type='OwlDrop')
 
-        if worlds[0].spawn_positions:
+        if world.spawn_positions:
             one_way_entrance_pools['Spawn'] = world.get_shufflable_entrances(type='Spawn')
 
-        if worlds[0].warp_songs:
+        if world.warp_songs:
             one_way_entrance_pools['WarpSong'] = world.get_shufflable_entrances(type='WarpSong')
 
-        if worlds[0].shuffle_dungeon_entrances:
+        if world.shuffle_dungeon_entrances:
             entrance_pools['Dungeon'] = world.get_shufflable_entrances(type='Dungeon', only_primary=True)
             # The fill algorithm will already make sure gohma is reachable, however it can end up putting
             # a forest escape via the hands of spirit on Deku leading to Deku on spirit in logic. This is
             # not really a closed forest anymore, so specifically remove Deku Tree from closed forest.
-            if worlds[0].open_forest == 'closed':
+            if world.open_forest == 'closed':
                 entrance_pools['Dungeon'].remove(world.get_entrance('KF Outside Deku Tree -> Deku Tree Lobby'))
-            if worlds[0].decouple_entrances:
+            if world.decouple_entrances:
                 entrance_pools['DungeonReverse'] = [entrance.reverse for entrance in entrance_pools['Dungeon']]
-
-        if worlds[0].shuffle_interior_entrances:
+        if world.shuffle_interior_entrances:
             entrance_pools['Interior'] = world.get_shufflable_entrances(type='Interior', only_primary=True)
-            if worlds[0].shuffle_special_interior_entrances:
+            if world.shuffle_special_interior_entrances:
                 entrance_pools['Interior'] += world.get_shufflable_entrances(type='SpecialInterior', only_primary=True)
-            if worlds[0].decouple_entrances:
+            if world.decouple_entrances:
                 entrance_pools['InteriorReverse'] = [entrance.reverse for entrance in entrance_pools['Interior']]
 
-        if worlds[0].shuffle_grotto_entrances:
+        if world.shuffle_grotto_entrances:
             entrance_pools['GrottoGrave'] = world.get_shufflable_entrances(type='Grotto', only_primary=True)
             entrance_pools['GrottoGrave'] += world.get_shufflable_entrances(type='Grave', only_primary=True)
-            if worlds[0].decouple_entrances:
+            if world.decouple_entrances:
                 entrance_pools['GrottoGraveReverse'] = [entrance.reverse for entrance in entrance_pools['GrottoGrave']]
 
-        if worlds[0].shuffle_overworld_entrances:
-            exclude_overworld_reverse = (worlds[0].mix_entrance_pools == 'all') and not worlds[0].decouple_entrances
+        if world.shuffle_overworld_entrances:
+            exclude_overworld_reverse = (world.mix_entrance_pools == 'all') and not world.decouple_entrances
             entrance_pools['Overworld'] = world.get_shufflable_entrances(type='Overworld', only_primary=exclude_overworld_reverse)
-            if not worlds[0].decouple_entrances:
+            if not world.decouple_entrances:
                 entrance_pools['Overworld'].remove(world.get_entrance('GV Lower Stream -> Lake Hylia'))
 
         # Set shuffled entrances as such
@@ -412,13 +411,13 @@ def shuffle_random_entrances(worlds):
                 entrance.reverse.shuffled = True
 
         # Combine all entrance pools into one when mixing entrance pools
-        if worlds[0].mix_entrance_pools == 'all':
+        if world.mix_entrance_pools == 'all':
             entrance_pools = {'Mixed': list(chain.from_iterable(entrance_pools.values()))}
-        elif worlds[0].mix_entrance_pools == 'indoor':
-            if worlds[0].shuffle_overworld_entrances:
+        elif world.mix_entrance_pools == 'indoor':
+            if world.shuffle_overworld_entrances:
                 ow_entrance_pool = entrance_pools['Overworld']
             entrance_pools = {'Mixed': list(filter(lambda entrance: entrance.type != 'Overworld', chain.from_iterable(entrance_pools.values())))}
-            if worlds[0].shuffle_overworld_entrances:
+            if world.shuffle_overworld_entrances:
                 entrance_pools['Overworld'] = ow_entrance_pool
 
         # Build target entrance pools and set the assumption for entrances being reachable

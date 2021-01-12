@@ -102,7 +102,7 @@ def create_dungeons(world):
         name = dungeon_info['name']
         hint = dungeon_info['hint'] if 'hint' in dungeon_info else name
         
-        if world.settings.logic_rules == 'glitched':
+        if world.logic_rules == 'glitched':
             if not world.dungeon_mq[name]:
                 dungeon_json = os.path.join(data_path('Glitched World'), name + '.json')
             else:
@@ -123,7 +123,7 @@ def create_dungeons(world):
             small_keys = ItemFactory(['Small Key (%s)' % name] * dungeon_info['small_key_mq'])           
         dungeon_items = ItemFactory(['Map (%s)' % name, 
                                      'Compass (%s)' % name] * dungeon_info['dungeon_item'])
-        if world.settings.shuffle_mapcompass in ['any_dungeon', 'overworld']:
+        if world.shuffle_mapcompass in ['any_dungeon', 'overworld']:
             for item in dungeon_items:
                 item.priority = True
 

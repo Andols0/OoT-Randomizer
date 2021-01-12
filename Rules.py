@@ -24,7 +24,9 @@ def set_rules(world):
                         and item.type != 'Song')
                     or (item.type == 'Song' and item.world.id == location.world.id))
             else:
-                add_item_rule(location, lambda location, item: item.type != 'Song')
+                add_item_rule(location, lambda location, item: item.type != 'Song' or location.world.id != item.world.id)
+            #the resaoning for changing this is that restricted song items are placed earlier, so whats left is the "anywhere" songs
+            #even if the current world have only songs shuffeled with restricted settings, it should not restrict other worlds songs.
 
         if location.type == 'Shop':
             if location.name in world.shop_prices:
@@ -32,7 +34,8 @@ def set_rules(world):
                 location.price = world.shop_prices[location.name]
                 location.add_rule(create_shop_rule(location))
             else:
-                add_item_rule(location, lambda location, item: item.type == 'Shop' and item.world.id == location.world.id)
+                add_item_rule(location, lambda location, item: (item.type == 'Shop' and item.world.id == location.world.id) or location.has_item())
+                #If the location already has an item this is probably a check for reachability in multiworld. If it got an item its probalby reachable.
         elif 'Deku Scrub' in location.name:
             location.add_rule(create_shop_rule(location))
         else:
