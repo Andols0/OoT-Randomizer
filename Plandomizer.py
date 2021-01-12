@@ -885,15 +885,32 @@ class Distribution(object):
 
 
     def populate_starting_items_from_settings(self):
-        starting_items = list(itertools.chain(self.settings.starting_equipment, self.settings.starting_items, self.settings.starting_songs))
+        for world in self.world_dists:
+            WorldName = "World " + str(world.id + 1)
+            if WorldName in self.settings.starting_equipment:
+                starting_items = list(itertools.chain(self.settings.starting_equipment[WorldName],self.settings.starting_equipment))
+            else:
+                starting_items = list(itertools.chain(self.settings.starting_equipment))
+
+            if WorldName in self.settings.starting_items:
+                starting_items = starting_items+list(itertools.chain(self.settings.starting_items[WorldName],self.settings.starting_items))
+            else:
+                starting_items = starting_items + list(itertools.chain(self.settings.starting_items))
+            
+            if WorldName in self.settings.starting_songs:
+                starting_items = starting_items + list(itertools.chain(self.settings.starting_songs[WorldName],self.settings.starting_songs))
+            else:
+                starting_items = starting_items + list(itertools.chain(self.settings.starting_songs))
+
         data = defaultdict(int)
         for itemsetting in starting_items:
+                if not "World" in itemsetting:
             if itemsetting in StartingItems.everything:
                 item = StartingItems.everything[itemsetting]
                 if not item.special:
                     data[item.itemname] += 1
                 else:
-                    if item.itemname == 'Rutos Letter' and self.settings.zora_fountain != 'open':
+                            if item.itemname == 'Rutos Letter' and self.zora_fountain != 'open':
                         data['Rutos Letter'] = 1
                     elif item.itemname in ['Bottle', 'Rutos Letter']:
                         data['Bottle'] += 1
@@ -921,7 +938,6 @@ class Distribution(object):
                 data['Piece of Heart'] += 4
                 data['Heart Container'] += 1
 
-        for world in self.world_dists:
             world.update({'starting_items': data})
 
 
