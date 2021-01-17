@@ -393,11 +393,11 @@ def shuffle_random_entrances(worlds):
 
         if world.warp_songs:
             one_way_entrance_pools['WarpSong'] = world.get_shufflable_entrances(type='WarpSong')
-            if worlds[0].all_reachable and worlds[0].logic_rules == 'glitchless':
+            if world.all_reachable and world.logic_rules == 'glitchless':
                 # In glitchless, there aren't any other ways to access these areas
                 one_way_priorities['Bolero'] = priority_entrance_table['Bolero']
                 one_way_priorities['Nocturne'] = priority_entrance_table['Nocturne']
-                if not worlds[0].shuffle_dungeon_entrances and not worlds[0].shuffle_overworld_entrances:
+                if not world.shuffle_dungeon_entrances and not world.shuffle_overworld_entrances:
                     one_way_priorities['Requiem'] = priority_entrance_table['Requiem']
 
         if world.shuffle_dungeon_entrances:
