@@ -43,8 +43,6 @@ def set_rules(world):
 
         if world.skip_child_zelda and location.name == 'Song from Impa':
             limit_to_itemset(location, SaveContext.giveable_items)
-            #If this is a multiworld the item has to be in the current world.
-            add_item_rule(location, lambda location, item: item.world.id == location.world.id)
 
         if location.name == 'Forest Temple MQ First Room Chest' and world.shuffle_bosskeys == 'dungeon' and world.shuffle_smallkeys == 'dungeon' and world.tokensanity == 'off':
             # This location needs to be a small key. Make sure the boss key isn't placed here.
