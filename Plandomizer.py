@@ -310,6 +310,11 @@ class WorldDistribution(object):
             if name == "allowed_tricks":
                 for trick in record:
                     world.__dict__[trick] = True
+            elif name == "disabled_locations":
+                for location in record:
+                    if not location in world.distribution.locations:
+                        world.distribution.add_location(location, '#Junk')
+                world.disabled_locations = world.disabled_locations + [location for location in record if not location in world.disabled_locations]
             else:
                 setattr(world, name, record)
 
