@@ -879,7 +879,6 @@ class Distribution(object):
             self.populate_starting_items_from_settings()
 
         world_names = ['World %d' % (i + 1) for i in range(len(self.world_dists))]
-        print("LOADING PLANDOFILE")
         for k in per_world_keys:
             # Anything starting with ':' is output-only and we ignore it in world.update anyway.
             if k in self.src_dict and k[0] != ':':
