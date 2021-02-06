@@ -307,7 +307,11 @@ class WorldDistribution(object):
 
     def configure_world_settings(self, world):
         for name, record in self.world_settings.items():
-            if name == "allowed_tricks":
+            if name in ["triforce_hunt", "triforce_goal_per_world", "all_reachable"]:
+                raise RuntimeError('Setting %s cannot be defined to a specific world' % name)
+            elif name == "logic_rules" and record == "none":
+                raise RuntimeError('No logic cannot be defined to a specific world')
+            elif name == "allowed_tricks":
                 for trick in record:
                     world.__dict__[trick] = True
             elif name == "disabled_locations":
