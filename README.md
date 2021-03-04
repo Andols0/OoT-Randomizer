@@ -1,3 +1,57 @@
+
+This is a branch to enable multiworlds to have indivitual settings.
+You do this with the help of a plandomizer file.
+Specifically in a new field called `world_settings`
+It's not possible to specify Triforce hunt, No logic and reachable only inside world settings.
+The same setting restrictions applies as in the GUI. Ex entrance rando is not possible inside a glitched world.
+Settings not set in the plando file will be the ones specified inside the GUI. Or if using the command line, the settings string or settings.sav file
+
+```
+"world_settings": {
+  "Wold 1": {
+    "setting1": true       etc...
+
+    "bridge": "medallions",
+    "bridge_medallions": 3,
+
+    allowed_tricks = [    <- Will ADD a trick to this world. It's not possible to remove a global trick from a world.
+      "logic_zora_with_cucco",
+      "logic_fire_flame_maze"
+    ]
+  },
+  "World 2": {
+    "settings1": false,    etc....
+
+    "bridge": "stones",
+    "bridge_stones": 2,
+
+    disabled_locations = [ <- Will ADD a disabled location to this world. It's not possible to remove a global disabled location from a world.
+      "Kak Man on Roof",
+      "Graveyard Dampe Race Freestanding PoH"
+    ]
+  },
+},
+"settings": {             <- Settings specified inside here will be for all worlds. world_settings still overrides this. Works as normal.
+
+  "triforce hunt": false,
+  
+  disabled_locations = [ <- disabled_locations and allowed_tricks specified inside the settings part will apply to all worlds (global).
+    "logic_fewer_tunic_requirements"
+  ],
+
+  "starting_items": {     <- There is 3 categories of items, they are formatted in the same way but separatly. starting_items, starting_equipment and starting_songs see StartingItems.py for a list of possible items.
+    "bombs": true,    <- All worlds will have a bomb bag
+    "World 1":[
+      "bow",          <- Only World 1 have a bow
+    ],
+    "World 2" : [
+      "slingshot",
+      "slingshot2"    <- If the item/equipement is upgradable you need to specify BOTH and add a number behind the extra (2,3 etc) (If you only set slingshot2, the player will only have the "first" slingshot)
+    ]
+  } Note that starting_items, starting_equipment and starting_songs are inside the "settings" {} part and not standalone.
+}
+```  
+
 # OoTRandomizer
 
 This is a randomizer for _The Legend of Zelda: Ocarina of Time_ for the Nintendo 64.
