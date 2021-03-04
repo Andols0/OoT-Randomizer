@@ -2,8 +2,10 @@
 This is a branch to enable multiworlds to have indivitual settings.
 You do this with the help of a plandomizer file.
 Specifically in a new field called `world_settings`
+
 It's not possible to specify Triforce hunt, No logic and reachable only inside world settings.
 The same setting restrictions applies as in the GUI. Ex entrance rando is not possible inside a glitched world.
+
 Settings not set in the plando file will be the ones specified inside the GUI. Or if using the command line, the settings string or settings.sav file
 
 ```
