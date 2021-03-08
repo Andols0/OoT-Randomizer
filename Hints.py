@@ -533,7 +533,7 @@ def get_dungeon_hint(spoiler, world, checked):
 
 
 def get_entrance_hint(spoiler, world, checked):
-    if not world.entrance_shuffle:
+    if not world.entrance_shuffle or world.logic_rules == 'glitched':
         return None
 
     entrance_hints = list(filter(lambda hint: hint.name not in checked, getHintGroup('entrance', world)))

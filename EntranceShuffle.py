@@ -377,6 +377,9 @@ def shuffle_random_entrances(worlds):
 
     # Shuffle all entrances within their own worlds
     for world in worlds:
+        #Entrance rando is disabled in the GUI when glitched is selected. Disable entrance randomizing in glitched worlds..
+        if world.logic_rules == 'glitched' or not(world.entrance_shuffle):
+            continue
         # Set entrance data for all entrances, even those we aren't shuffling
         set_all_entrances_data(world)
 
@@ -517,6 +520,8 @@ def shuffle_random_entrances(worlds):
 
     # Check that all shuffled entrances are properly connected to a region
     for world in worlds:
+        if world.logic_rules == 'glitched' or not(world.entrance_shuffle):
+            continue
         for entrance in world.get_shuffled_entrances():
             if entrance.connected_region == None:
                 logging.getLogger('').error('%s was shuffled but still isn\'t connected to any region [World %d]', entrance, world.id)
@@ -533,6 +538,8 @@ def shuffle_random_entrances(worlds):
 
     # Validate the worlds one last time to ensure all special conditions are still valid
     for world in worlds:
+        if world.logic_rules == 'glitched' or not(world.entrance_shuffle):
+            continue
         try:
             validate_world(world, worlds, None, locations_to_ensure_reachable, complete_itempool)
         except EntranceShuffleError as error:
